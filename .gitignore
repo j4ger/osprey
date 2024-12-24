@@ -8,3 +8,6 @@
 
 # nix files
 .direnv
+
+# nodejs
+node_modules

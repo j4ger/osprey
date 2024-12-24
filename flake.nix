@@ -15,7 +15,11 @@
       in {
         devShells.default = pkgs.mkShell {
           name = "osprey-web-devshell";
-          buildInputs = baseShell.buildInputs ++ [ ];
+          buildInputs = baseShell.buildInputs ++ [
+            pkgs.bun
+            pkgs.just
+            pkgs.tmux
+          ];
 
           shellHook = "\n";
         };
