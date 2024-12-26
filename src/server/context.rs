@@ -1,4 +1,5 @@
 use dashmap::DashMap;
+use dioxus::prelude::{extract, FromContext};
 use tokio::sync::{mpsc, oneshot};
 
 use crate::bridge::{config::Config, subscription::Subscription, target::Target};
@@ -51,6 +52,11 @@ impl AppContext {
         (context, management_task)
     }
 
+    pub async fn get() -> Self {
+        let FromContext(context) = extract().await.unwrap();
+        context
+    }
+
     pub async fn call(&self, message: ManagementMessage) -> CallResult {
         let (tx, rx) = oneshot::channel();
         self.management_tx
@@ -67,8 +73,16 @@ impl AppContext {
         self.targets.iter().map(|item| item.clone()).collect()
     }
 
+    pub fn get_target_count(&self) -> usize {
+        self.targets.len()
+    }
+
     pub fn get_subscriptions(&self) -> Vec<Subscription> {
         self.subscriptions.iter().map(|item| item.clone()).collect()
+    }
+
+    pub fn get_subscription_count(&self) -> usize {
+        self.subscriptions.len()
     }
 
     pub async fn create_target(&self, target: Target) -> CallResult {

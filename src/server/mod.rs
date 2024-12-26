@@ -1,5 +1,4 @@
 mod config;
-mod context;
 mod logger;
 mod management;
 mod message;
@@ -9,3 +8,6 @@ mod task;
 
 mod launch;
 pub use launch::launch;
+
+mod context;
+pub use context::AppContext;

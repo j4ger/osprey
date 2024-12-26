@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use anyhow::bail;
 use tokio::{
     select,
     sync::{broadcast, mpsc, oneshot},
@@ -30,11 +31,7 @@ pub enum ManagementMessage {
     UpdateConfig(Config),
 }
 
-#[derive(Debug)]
-pub enum ManagementError {
-    NotFound,
-    DuplicateId,
-}
+pub type ManagementError = anyhow::Error;
 
 pub async fn handle_management(
     mut rx: mpsc::Receiver<ManagementMessageCapsule>,
@@ -159,7 +156,7 @@ impl ManagementState {
 
     pub fn create_target(&mut self, target: Target) -> CallResult {
         if self.targets.iter().any(|t| t.id == target.id) {
-            return Err(ManagementError::DuplicateId);
+            bail!("Target ID already exists")
         }
         let (terminator_tx, terminator_rx) = oneshot::channel();
         let handle = tokio::spawn(handle_target(
@@ -182,13 +179,13 @@ impl ManagementState {
             save_targets(&self.targets).unwrap();
             Ok(())
         } else {
-            Err(ManagementError::NotFound)
+            bail!("Target not found.")
         }
     }
 
     pub fn create_subscription(&mut self, subscription: Subscription) -> CallResult {
         if self.subscriptions.iter().any(|s| s.id == subscription.id) {
-            return Err(ManagementError::DuplicateId);
+            bail!("Subscription ID already exists.")
         }
         let (terminator_tx, terminator_rx) = oneshot::channel();
         let handle = tokio::spawn(handle_subscription(
@@ -212,7 +209,7 @@ impl ManagementState {
             save_subscriptions(&self.subscriptions).unwrap();
             Ok(())
         } else {
-            Err(ManagementError::NotFound)
+            bail!("Subscription not found.")
         }
     }
 }

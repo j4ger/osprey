@@ -1,10 +1,10 @@
-use std::net::SocketAddr;
+use std::{net::SocketAddr, sync::Arc};
 
 use dioxus::prelude::*;
 
 use crate::bridge::config::Config;
 
-use super::{subscription::load_subscriptions, target::load_targets};
+use super::{context::AppContext, subscription::load_subscriptions, target::load_targets};
 
 pub fn launch(app: fn() -> Element) {
     let config = Config::load().unwrap();
@@ -21,17 +21,25 @@ pub fn launch(app: fn() -> Element) {
         SocketAddr::new(config.server.address.parse().unwrap(), config.server.port)
     };
 
-    let router = axum::Router::new()
-        .serve_dioxus_application(ServeConfig::new().unwrap(), app)
-        .into_make_service();
+    tokio::runtime::Runtime::new().unwrap().block_on(async {
+        let (app_state, management_task) = AppContext::new(config, targets, subscriptions).await;
 
-    tokio::runtime::Runtime::new()
-        .unwrap()
-        .block_on(async {
-            let listener = tokio::net::TcpListener::bind(&socket_addr).await.unwrap();
-            axum::serve(listener, router).await
-        })
-        .unwrap()
+        let ctx_providers: Vec<ContextFn> = vec![Box::new(move || Box::new(app_state.clone()))];
+
+        let router = axum::Router::new()
+            .serve_dioxus_application(
+                ServeConfig::builder()
+                    .context_providers(Arc::new(ctx_providers))
+                    .build()
+                    .unwrap(),
+                app,
+            )
+            .into_make_service();
+
+        let listener = tokio::net::TcpListener::bind(&socket_addr).await.unwrap();
+        axum::serve(listener, router).await.unwrap();
+        management_task.kill();
+    })
 
     // TODO: graceful shutdown?
 }

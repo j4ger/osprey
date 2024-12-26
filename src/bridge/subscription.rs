@@ -1,8 +1,6 @@
-#[cfg(feature = "server")]
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug)]
-#[cfg_attr(feature = "server", derive(Serialize, Deserialize))]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Subscription {
     pub id: usize,
     pub url: String,

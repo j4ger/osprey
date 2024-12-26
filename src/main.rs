@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use components::Navbar;
-use views::Home;
+use views::*;
 
 mod bridge;
 mod components;
@@ -16,6 +16,9 @@ enum Route {
     #[layout(Navbar)]
     #[route("/")]
     Home {},
+
+    #[route("/subscriptions")]
+    Subscriptions {},
 }
 
 const FAVICON: Asset = asset!("/assets/favicon.ico");
@@ -27,13 +30,17 @@ fn main() {
     crate::server::launch(App);
 }
 
+#[allow(non_snake_case)]
 #[component]
 fn App() -> Element {
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
 
-        Router::<Route> {}
+        div { class: "min-h-screen bg-gradient-to-tr from-base-100 to-base-300",
+            Router::<Route> {}
+        }
     }
 }
 
 // TODO: logging
+// TODO: error handling using ErrorBoundary
