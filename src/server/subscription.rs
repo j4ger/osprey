@@ -1,10 +1,10 @@
 use anyhow::Context;
-use chrono::DateTime;
 use figment::{
     providers::{Format, Toml},
     Figment,
 };
 use rss::{Channel, Item};
+use time::{format_description::well_known::Rfc2822, PrimitiveDateTime};
 use tokio::sync::{broadcast, mpsc, oneshot};
 use tracing::warn;
 
@@ -41,9 +41,10 @@ impl Subscription {
             Channel::read_from(&content[..]).context("Failed to parse RSS channel data.")?;
         for item in channel.items() {
             if let Some(pub_time) = item.pub_date() {
-                if let Ok(pub_time) = DateTime::parse_from_rfc2822(pub_time) {
-                    if pub_time.timestamp() as u64 > self.last_update {
-                        self.last_update = pub_time.timestamp() as u64;
+                if let Ok(pub_time) = PrimitiveDateTime::parse(pub_time, &Rfc2822) {
+                    let timestamp = pub_time.assume_utc().unix_timestamp();
+                    if timestamp > self.last_update {
+                        self.last_update = timestamp;
                         result.push(item.clone());
                     }
                 } else {
@@ -71,21 +72,11 @@ pub async fn handle_subscription(
     async fn check_update(
         subscription: &mut Subscription,
         sender: &broadcast::Sender<UpdateMessage>,
-        stat_sender: &mpsc::Sender<StatMessage>,
+        stat_sender: &mpsc::Sender<StatMessage>, // TODO: let stat sender count the number of updates and last update time
+                                                 // TODO: and write it to disk
     ) {
         if let Some(items) = subscription.fetch().await.unwrap() {
             for item in items {
-                if let Some(update_time) = item.pub_date() {
-                    if let Ok(update_time) = chrono::DateTime::parse_from_rfc2822(update_time) {
-                        if update_time.timestamp() as u64 > subscription.last_update {
-                            subscription.last_update = update_time.timestamp() as u64;
-                        } else {
-                            continue;
-                        }
-                    }
-                } else {
-                    continue;
-                }
                 let message = UpdateMessage {
                     item,
                     targets: subscription.push_targets.clone(),

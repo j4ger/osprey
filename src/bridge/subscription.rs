@@ -6,7 +6,8 @@ pub struct Subscription {
     pub url: String,
     pub name: String,
     pub interval: u64,
-    pub last_update: u64,
+    pub last_update: i64,
     pub push_targets: Vec<usize>,
+    pub update_count: usize,
     // TODO: template
 }

@@ -31,7 +31,7 @@ macro_rules! gen_stat {
             let count = use_server_future($future)?.suspend()?;
 
             rsx! {
-                div { class: "stat btn h-full",
+                div { class: "stat btn h-full rounded-box",
                     onclick: move |_| {nav.push($route);},
                     div { class: "stat-figure text-base-content size-8",
                         span { class: $icon, class: "size-8" }

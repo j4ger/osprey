@@ -99,6 +99,13 @@ impl AppContext {
         Ok(())
     }
 
+    pub async fn modify_target(&self, target: Target) -> CallResult {
+        self.call(ManagementMessage::ModifyTarget(target.clone()))
+            .await?;
+        self.targets.insert(target.id, target);
+        Ok(())
+    }
+
     pub async fn create_subscription(&self, subscription: Subscription) -> CallResult {
         self.call(ManagementMessage::CreateSubscription(subscription.clone()))
             .await?;
@@ -110,6 +117,13 @@ impl AppContext {
         self.call(ManagementMessage::DeleteSubscription(subscription_id))
             .await?;
         self.subscriptions.remove(&subscription_id);
+        Ok(())
+    }
+
+    pub async fn modify_subscription(&self, subscription: Subscription) -> CallResult {
+        self.call(ManagementMessage::ModifySubscription(subscription.clone()))
+            .await?;
+        self.subscriptions.insert(subscription.id, subscription);
         Ok(())
     }
 }

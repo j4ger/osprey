@@ -5,6 +5,7 @@ use views::*;
 
 mod bridge;
 mod components;
+mod utils;
 mod views;
 
 #[cfg(feature = "server")]
@@ -36,7 +37,7 @@ fn App() -> Element {
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
 
-        div { class: "min-h-screen bg-gradient-to-tr from-base-100 to-base-300",
+        div { class: "min-h-screen bg-gradient-to-tr from-base-200 to-base-100",
             Router::<Route> {}
         }
     }

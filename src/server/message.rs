@@ -1,4 +1,3 @@
-use chrono::Utc;
 use rss::Item;
 
 #[derive(Clone, Debug)]
@@ -17,7 +16,7 @@ pub enum StatMessage {
     },
     SubscriptionSuccess {
         id: usize,
-        time: chrono::DateTime<Utc>,
+        time: time::PrimitiveDateTime,
     },
     SubscriptionFailure {
         id: usize,

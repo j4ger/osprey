@@ -27,9 +27,14 @@ pub struct LoadingProps {
 pub fn Loading(props: LoadingProps) -> Element {
     rsx! {
         SuspenseBoundary {
-            fallback: |_| rsx! {
-                div { class: "p-4",
-                    SpinnerLg {}
+            fallback: |context: SuspenseContext|
+            rsx! {
+                if let Some(placeholder) = context.suspense_placeholder() {
+                    {placeholder}
+                } else {
+                    div { class: "p-4",
+                        SpinnerLg {}
+                    }
                 }
             },
             { props.children }

@@ -26,8 +26,10 @@ pub struct ManagementMessageCapsule {
 pub enum ManagementMessage {
     CreateTarget(Target),
     DeleteTarget(usize),
+    ModifyTarget(Target),
     CreateSubscription(Subscription),
     DeleteSubscription(usize),
+    ModifySubscription(Subscription),
     UpdateConfig(Config),
 }
 
@@ -60,8 +62,14 @@ pub async fn handle_management(
                         ManagementMessage::CreateSubscription(subscription) => {
                             state.create_subscription(subscription)
                         }
+                        ManagementMessage::ModifyTarget(target) => {
+                            state.modify_target(target)
+                        }
                         ManagementMessage::DeleteSubscription(subscription_id) => {
                             state.delete_subscription(subscription_id)
+                        }
+                        ManagementMessage::ModifySubscription(subscription) => {
+                            state.modify_subscription(subscription)
                         }
                         ManagementMessage::UpdateConfig(config) => {
                             config.save().unwrap();
@@ -183,6 +191,18 @@ impl ManagementState {
         }
     }
 
+    pub fn modify_target(&mut self, target: Target) -> CallResult {
+        if let Some(task) = self.target_tasks.remove(&target.id) {
+            task.kill();
+            self.targets.retain(|t| t.id != target.id);
+            self.create_target(target);
+            save_targets(&self.targets).unwrap();
+            Ok(())
+        } else {
+            bail!("Target not found.")
+        }
+    }
+
     pub fn create_subscription(&mut self, subscription: Subscription) -> CallResult {
         if self.subscriptions.iter().any(|s| s.id == subscription.id) {
             bail!("Subscription ID already exists.")
@@ -206,6 +226,18 @@ impl ManagementState {
             task.kill();
             self.subscriptions
                 .retain(|subscription| subscription.id != subscription_id);
+            save_subscriptions(&self.subscriptions).unwrap();
+            Ok(())
+        } else {
+            bail!("Subscription not found.")
+        }
+    }
+
+    pub fn modify_subscription(&mut self, subscription: Subscription) -> CallResult {
+        if let Some(task) = self.subscription_tasks.remove(&subscription.id) {
+            task.kill();
+            self.subscriptions.retain(|s| s.id != subscription.id);
+            self.create_subscription(subscription);
             save_subscriptions(&self.subscriptions).unwrap();
             Ok(())
         } else {
