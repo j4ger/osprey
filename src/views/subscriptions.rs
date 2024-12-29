@@ -40,6 +40,44 @@ pub fn Subscriptions() -> Element {
 
     rsx! {
         div {
+            role: "dialog",
+            tabindex: "-1",
+            class: "overlay modal overlay-open:opacity-100 modal-middle hidden",
+            id: "confirm-modal",
+            div { class: "modal-dialog overlay-open:opacity-100",
+                div { class: "modal-content",
+                    div { class: "modal-header",
+                        h3 { class: "modal-title", "Confirm Delete?" }
+                        button {
+                            r#type: "button",
+                            "aria-label": "Close",
+                            "data-overlay": "#middle-center-modal",
+                            class: "btn btn-text btn-circle btn-sm absolute end-3 top-3",
+                            span { class: "icon-[tabler--x] size-4" }
+                        }
+                    }
+                    div { class: "modal-body",
+                        "Are you sure you want to delete this subscription? This action cannot be undone."
+                    }
+                    div { class: "modal-footer",
+                        button {
+                            r#type: "button",
+                            "data-overlay": "#confirm-modal",
+                            class: "btn btn-warning",
+                            "Confirm"
+                        }
+                        button {
+                            r#type: "button",
+                            "data-overlay": "#confirm-modal",
+                            class: "btn btn-primary",
+                            "Cancel"
+                        }
+                    }
+                }
+            }
+        }
+
+        div {
             div { class: "px-4 sm:px-0",
                 h3 { class: "text-2xl font-semibold text-base-content/90", "Subscriptions" }
                 p { class: "mt-1 max-w-full text-base-content/80",
@@ -64,8 +102,18 @@ pub fn Subscriptions() -> Element {
                                                 "{subscription.url}"
                                             }
                                             div { class: "card-actions",
-                                                button { class: "btn btn-accent", "Edit" }
-                                                button { class: "btn btn-warning", "Delete" }
+                                                button { class: "btn btn-accent",
+                                                    role: "button",
+                                                    "Edit"
+                                                }
+                                                button { class: "btn btn-warning",
+                                                    role: "button",
+                                                    "aria-haspopup": "dialog",
+                                                    "aria-expanded": "false",
+                                                    "aria-controls": "confirm-modal",
+                                                    "data-overlay":"#confirm-modal",
+                                                    "Delete"
+                                                }
                                             }
                                         }
                                         div { class: "card-side p-2 hidden md:block",

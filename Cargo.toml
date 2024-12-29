@@ -9,9 +9,9 @@ edition = "2021"
 [dependencies]
 dioxus = { version = "0.6.1", features = ["router", "fullstack", "logger"] }
 serde = { version = "1", features = ["derive"] }
-time = { version = "0.3.37", features = ["macros", "parsing"] }
-dioxus-fullstack = { version = "0.6.1", optional = true }                    # TODO: actually this is reexported by dioxus so it can be removed by adding a feature flag
-dioxus-cli-config = { version = "0.6.1", optional = true }                   # this as well
+time = { version = "0.3.37", features = ["macros", "parsing", "wasm-bindgen"] }
+dioxus-fullstack = { version = "0.6.1", optional = true }                       # TODO: actually this is reexported by dioxus so it can be removed by adding a feature flag
+dioxus-cli-config = { version = "0.6.1", optional = true }                      # this as well
 axum = { version = "0.7.0", optional = true }
 tokio = { version = "1", features = ["full"], optional = true }
 tracing = { version = "0.1", optional = true }

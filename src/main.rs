@@ -23,6 +23,7 @@ enum Route {
 }
 
 const FAVICON: Asset = asset!("/assets/favicon.ico");
+const SCRIPT: Asset = asset!("/node_modules/flyonui/dist/js/overlay.js");
 
 fn main() {
     #[cfg(not(feature = "server"))]
@@ -40,6 +41,8 @@ fn App() -> Element {
         div { class: "min-h-screen bg-gradient-to-tr from-base-200 to-base-100",
             Router::<Route> {}
         }
+
+        script { src: SCRIPT }
     }
 }
 
