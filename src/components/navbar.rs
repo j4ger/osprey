@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 
+use crate::components::toast::{send_toast, ToastKind};
 use crate::components::Loading;
 use crate::Route;
 
@@ -15,6 +16,17 @@ pub fn Navbar() -> Element {
                         img { src: LOGO, alt: "logo" }
                     }
                 }
+
+                button { class: "btn btn-primary",
+                    onclick:  |_| async {
+                        send_toast("111", ToastKind::Info).await;
+                        send_toast("111", ToastKind::Warning).await;
+                        send_toast("111", ToastKind::Success).await;
+                        send_toast("111", ToastKind::Error).await;
+                    },
+                    "Toast"
+                }
+
             }
             div { class: "navbar-center flex items-center",
                 a {
@@ -39,7 +51,7 @@ pub fn Navbar() -> Element {
         }
 
         div { class: "flex flex-col w-full items-center pt-4 px-8",
-            div { class: "container",
+            div { class: "container w-fit",
                 Loading {
                     Outlet::<Route> {}
                 }

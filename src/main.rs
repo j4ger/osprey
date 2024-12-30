@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use components::Navbar;
+use components::{Navbar, ToastContext, Toasts};
 use views::*;
 
 mod bridge;
@@ -35,8 +35,13 @@ fn main() {
 #[allow(non_snake_case)]
 #[component]
 fn App() -> Element {
+    let toast_ctx = ToastContext::new();
+    provide_context(use_signal(move || toast_ctx));
+
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
+
+        Toasts {}
 
         div { class: "min-h-screen bg-gradient-to-tr from-base-200 to-base-100",
             Router::<Route> {}

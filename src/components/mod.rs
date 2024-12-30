@@ -6,3 +6,6 @@ pub use spinner::*;
 
 mod stat;
 pub use stat::*;
+
+mod toast;
+pub use toast::*;
