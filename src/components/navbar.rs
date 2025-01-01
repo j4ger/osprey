@@ -1,6 +1,5 @@
 use dioxus::prelude::*;
 
-use crate::components::toast::{send_toast, ToastKind};
 use crate::components::Loading;
 use crate::Route;
 
@@ -9,22 +8,12 @@ const LOGO: Asset = asset!("/assets/osprey.png");
 #[component]
 pub fn Navbar() -> Element {
     rsx! {
-        nav { class: "navbar sticky top-0 z-50 rounded-box shadow-md justify-between backdrop-blur",
+        nav { class: "navbar sticky top-0 z-10 rounded-box shadow-md justify-between backdrop-blur",
             div { class: "navbar-start",
                 a { class: "avatar", href: "/",
                     div { class: "size-12 rounded-full",
                         img { src: LOGO, alt: "logo" }
                     }
-                }
-
-                button { class: "btn btn-primary",
-                    onclick:  |_| async {
-                        send_toast("111", ToastKind::Info).await;
-                        send_toast("111", ToastKind::Warning).await;
-                        send_toast("111", ToastKind::Success).await;
-                        send_toast("111", ToastKind::Error).await;
-                    },
-                    "Toast"
                 }
 
             }
@@ -50,7 +39,7 @@ pub fn Navbar() -> Element {
             }
         }
 
-        div { class: "flex flex-col w-full items-center pt-4 px-8",
+        div { class: "flex flex-col w-full items-center pt-4 px-8 z-0",
             div { class: "container w-fit",
                 Loading {
                     Outlet::<Route> {}

@@ -48,8 +48,9 @@ pub fn SingleToast(toast: ToastProps) -> Element {
     };
 
     rsx! {
-        div { role: "alert",
-            class: "alert alert-{kind} flex items-center gap-4 transition-all duration-800 ease-in-out",
+        div { key: toast.id,
+            role: "alert",
+            class: "alert alert-{kind} flex items-center gap-4 transition-all duration-800 ease-in-out hover:scale-102",
             class: if toast.fade_out { "opacity-0 translate-y-10" } else { "opacity-100 translate-y-0" },
             span { class: "icon-[tabler--{icon}] size-6" }
             div { class: "flex flex-col gap-1",
@@ -116,7 +117,7 @@ pub fn Toasts() -> Element {
     let context = use_context::<Signal<ToastContext>>();
 
     rsx! {
-        div { class: "fixed bottom-0 flex flex-col items-center gap-4 p-4 z-60",
+        div { class: "fixed bottom-0 flex flex-col items-center gap-4 p-4 z-50",
             for toast in context.read().toasts.iter().rev() {
                 SingleToast { toast: toast.clone() }
             }

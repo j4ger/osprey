@@ -9,3 +9,6 @@ pub use stat::*;
 
 mod toast;
 pub use toast::*;
+
+mod modal;
+pub use modal::*;

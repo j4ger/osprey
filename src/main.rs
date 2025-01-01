@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use components::{Navbar, ToastContext, Toasts};
+use components::{GlobalLoading, GlobalLoadingContext, Navbar, ToastContext, Toasts};
 use views::*;
 
 mod bridge;
@@ -23,7 +23,6 @@ enum Route {
 }
 
 const FAVICON: Asset = asset!("/assets/favicon.ico");
-const SCRIPT: Asset = asset!("/node_modules/flyonui/dist/js/overlay.js");
 
 fn main() {
     #[cfg(not(feature = "server"))]
@@ -32,22 +31,23 @@ fn main() {
     crate::server::launch(App);
 }
 
-#[allow(non_snake_case)]
 #[component]
 fn App() -> Element {
     let toast_ctx = ToastContext::new();
     provide_context(use_signal(move || toast_ctx));
 
+    let loading_ctx = GlobalLoadingContext::new();
+    provide_context(use_signal(move || loading_ctx));
+
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
-
-        Toasts {}
 
         div { class: "min-h-screen bg-gradient-to-tr from-base-200 to-base-100",
             Router::<Route> {}
         }
 
-        script { src: SCRIPT }
+        Toasts {}
+        GlobalLoading {}
     }
 }
 
