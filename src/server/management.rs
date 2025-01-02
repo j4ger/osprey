@@ -162,9 +162,11 @@ impl ManagementState {
         self.log_task.kill();
     }
 
-    pub fn create_target(&mut self, target: Target) -> CallResult {
+    pub fn create_target(&mut self, mut target: Target) -> CallResult {
+        let mut id = target.id;
         if self.targets.iter().any(|t| t.id == target.id) {
-            bail!("Target ID already exists")
+            id = self.targets.iter().map(|t| t.id).max().unwrap_or(0) + 1;
+            target.id = id;
         }
         let (terminator_tx, terminator_rx) = oneshot::channel();
         let handle = tokio::spawn(handle_target(
@@ -174,7 +176,7 @@ impl ManagementState {
             self.log_tx.clone(),
         ));
         self.target_tasks
-            .insert(target.id, Task::new(terminator_tx, handle));
+            .insert(id, Task::new(terminator_tx, handle));
         self.targets.push(target);
         save_targets(&self.targets).unwrap();
         Ok(())
@@ -203,9 +205,11 @@ impl ManagementState {
         }
     }
 
-    pub fn create_subscription(&mut self, subscription: Subscription) -> CallResult {
+    pub fn create_subscription(&mut self, mut subscription: Subscription) -> CallResult {
+        let mut id = subscription.id;
         if self.subscriptions.iter().any(|s| s.id == subscription.id) {
-            bail!("Subscription ID already exists.")
+            id = self.subscriptions.iter().map(|s| s.id).max().unwrap_or(0) + 1;
+            subscription.id = id;
         }
         let (terminator_tx, terminator_rx) = oneshot::channel();
         let handle = tokio::spawn(handle_subscription(
@@ -215,7 +219,7 @@ impl ManagementState {
             self.log_tx.clone(),
         ));
         self.subscription_tasks
-            .insert(subscription.id, Task::new(terminator_tx, handle));
+            .insert(id, Task::new(terminator_tx, handle));
         self.subscriptions.push(subscription);
         save_subscriptions(&self.subscriptions).unwrap();
         Ok(())

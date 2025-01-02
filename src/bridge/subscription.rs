@@ -11,3 +11,17 @@ pub struct Subscription {
     pub update_count: usize,
     // TODO: template
 }
+
+impl Subscription {
+    pub fn empty() -> Self {
+        Self {
+            id: 0,
+            url: String::new(),
+            name: String::new(),
+            interval: 0,
+            last_update: 0,
+            push_targets: Vec::new(),
+            update_count: 0,
+        }
+    }
+}

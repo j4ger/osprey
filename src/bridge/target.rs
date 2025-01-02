@@ -7,3 +7,14 @@ pub struct Target {
     pub url: String,
     pub interval: u64,
 }
+
+impl Target {
+    pub fn empty() -> Self {
+        Self {
+            id: 0,
+            name: String::new(),
+            url: String::new(),
+            interval: 0,
+        }
+    }
+}

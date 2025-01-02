@@ -18,12 +18,8 @@ pub fn Subscriptions() -> Element {
     let count_future = use_server_future(get_subscription_count)?;
     let count = count_future.suspend()?;
 
-    let mut current_subscription: Signal<Option<Subscription>> = use_signal(|| None);
-    let current_name = use_signal(|| {
-        current_subscription()
-            .map(|sub| sub.name)
-            .unwrap_or("".into())
-    });
+    let mut current_subscription: Signal<Subscription> = use_signal(|| Subscription::empty());
+    let mut new_subscription = use_signal(|| false);
 
     let subscriptions: Signal<Result<Vec<Subscription>>> = use_signal(|| {
         Ok(vec![
@@ -67,7 +63,7 @@ pub fn Subscriptions() -> Element {
                     }
                 }
                 div { class: "modal-body",
-                    "Are you sure you want to delete this subscription: {current_name}? This action cannot be undone."
+                    "Are you sure you want to delete this subscription: {current_subscription().name}? This action cannot be undone."
                 }
                 div { class: "modal-footer",
                     button {
@@ -75,24 +71,21 @@ pub fn Subscriptions() -> Element {
                         class: "btn btn-warning",
                         onclick: move |_| async move {
                             set_loading();
-                            let id = if let Some(sub) = current_subscription.read().as_ref() {
-                                sub.id
-                            } else {
+                            if new_subscription() {
+                                unset_loading();
                                 return;
-                            };
+                            }
 
-                            match delete_subscription(id).await {
+                            match delete_subscription(current_subscription().id).await {
                                 Ok(_) => {
                                     unset_loading();
                                     confirm_open.set(false);
-                                    current_subscription.set(None);
 
                                     send_toast("Removed.", ToastKind::Success).await;
                                 }
                                 Err(err) => {
                                     unset_loading();
                                     confirm_open.set(false);
-                                    current_subscription.set(None);
 
                                     send_toast(format!("{}", err), ToastKind::Error).await;
                                 }
@@ -104,10 +97,7 @@ pub fn Subscriptions() -> Element {
                     button {
                         r#type: "button",
                         class: "btn btn-primary",
-                        onclick: move |_| {
-                            confirm_open.set(false);
-                            current_subscription.set(None);
-                        },
+                        onclick: move |_| confirm_open.set(false),
                         "Cancel"
                     }
                 }
@@ -116,36 +106,53 @@ pub fn Subscriptions() -> Element {
 
         Modal {
             open: edit_open,
+            scrollable: true,
             div { class: "modal-content",
                 div { class: "modal-header",
                     h3 { class: "modal-title",
-                        if let Some(sub) = current_subscription.read().as_ref() {
-                            "Edit {sub.name}"
-                        } else {
+                        if new_subscription() {
                             "New Subscription"
+                        } else {
+                            "Edit Subscription: {current_subscription().name}"
                         }
                     }
                     button {
                         r#type: "button",
                         "aria-label": "Close",
                         class: "btn btn-text btn-circle btn-sm absolute end-3 top-3",
-                        onclick: move |_| {
-                            edit_open.set(false);
-                        },
+                        onclick: move |_| edit_open.set(false),
                         span { class: "icon-[tabler--x] size-4" }
                     }
                 }
                 form {
                     div { class: "modal-body pt-0",
                         div { class: "mb-4",
-                            label { r#for: "fullName", class: "label label-text", " Full Name " }
+                            label { r#for: "name", class: "label label-text", " Name " }
                             input {
                                 r#type: "text",
-                                placeholder: "John Doe",
+                                placeholder: "",
                                 class: "input",
-                                id: "fullName",
+                                id: "name",
+                                value: current_subscription().name,
+                                oninput: move |event| current_subscription.with_mut(|s| {
+                                    s.name = event.value();
+                                })
                             }
                         }
+                        div { class: "mb-4",
+                            label { r#for: "url", class: "label label-text", " URL " }
+                            input {
+                                r#type: "text",
+                                placeholder: "RSS Feed URL",
+                                class: "input",
+                                id: "url",
+                                value: current_subscription().url,
+                                oninput: move |event| current_subscription.with_mut(|s| {
+                                    s.url = event.value();
+                                })
+                            }
+                        }
+
                         div { class: "mb-0.5 flex gap-4 max-sm:flex-col",
                             div { class: "w-full",
                                 label { r#for: "email", class: "label label-text", " Email " }
@@ -169,11 +176,17 @@ pub fn Subscriptions() -> Element {
                     div { class: "modal-footer",
                         button {
                             r#type: "button",
-                            "data-overlay": "#form-modal",
                             class: "btn btn-soft btn-secondary",
+                            onclick: move |_| edit_open.set(false),
                             "Close"
                         }
-                        button { r#type: "submit", class: "btn btn-primary", "Save changes" }
+                        button { r#type: "submit",
+                            class: "btn btn-primary",
+                            onclick: move |_| {
+
+                            },
+                            "Save changes"
+                        }
                     }
                 }
             }
@@ -211,7 +224,8 @@ pub fn Subscriptions() -> Element {
                                                         button { class: "btn btn-accent",
                                                             role: "button",
                                                             onclick: move |_| {
-                                                                current_subscription.set(Some(subscription_clone.clone()));
+                                                                current_subscription.set(subscription_clone.clone());
+                                                                new_subscription.set(false);
                                                                 edit_open.set(true);
                                                             },
                                                             "Edit"
@@ -219,7 +233,8 @@ pub fn Subscriptions() -> Element {
                                                         button { class: "btn btn-warning",
                                                             role: "button",
                                                             onclick: move |_| {
-                                                                current_subscription.set(Some(subscription.clone()));
+                                                                current_subscription.set(subscription.clone());
+                                                                new_subscription.set(false);
                                                                 confirm_open.set(true);
                                                             },
                                                             "Delete"
