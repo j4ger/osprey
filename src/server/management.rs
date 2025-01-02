@@ -16,6 +16,7 @@ use super::{
 };
 
 pub type CallResult = Result<(), ManagementError>;
+pub type ManagementError = anyhow::Error;
 
 pub struct ManagementMessageCapsule {
     pub message: ManagementMessage,
@@ -31,9 +32,8 @@ pub enum ManagementMessage {
     DeleteSubscription(usize),
     ModifySubscription(Subscription),
     UpdateConfig(Config),
+    ChangeRunState(bool),
 }
-
-pub type ManagementError = anyhow::Error;
 
 pub async fn handle_management(
     mut rx: mpsc::Receiver<ManagementMessageCapsule>,
@@ -76,6 +76,10 @@ pub async fn handle_management(
                             state.config = config;
                             Ok(())
                         }
+                        ManagementMessage::ChangeRunState(run_state) => {
+                            state.set_run_state(run_state);
+                            Ok(())
+                        }
                     };
                     message.response.send(result).unwrap();
                 } else {
@@ -94,6 +98,7 @@ pub async fn handle_management(
 // the manager would need to handle the creation and deletion of targets and subscriptions
 // modification of targets and subscriptions can be implemented in the corresponding server fn, with two calls
 struct ManagementState {
+    running: bool,
     config: Config,
     broadcast_tx: broadcast::Sender<UpdateMessage>,
     log_tx: mpsc::Sender<StatMessage>,
@@ -114,31 +119,12 @@ impl ManagementState {
         let log_handle = tokio::spawn(super::logger::handle_log(log_rx, log_terminator_rx));
         let log_task = Task::new(log_terminator, log_handle);
 
-        let mut target_tasks = HashMap::new();
-        for target in targets.iter() {
-            let (terminator_tx, terminator_rx) = oneshot::channel();
-            let handle = tokio::spawn(handle_target(
-                target.clone(),
-                broadcast_tx.subscribe(),
-                terminator_rx,
-                log_tx.clone(),
-            ));
-            target_tasks.insert(target.id, Task::new(terminator_tx, handle));
-        }
-
-        let mut subscription_tasks = HashMap::new();
-        for subscription in subscriptions.iter() {
-            let (terminator_tx, terminator_rx) = oneshot::channel();
-            let handle = tokio::spawn(handle_subscription(
-                subscription.clone(),
-                broadcast_tx.clone(),
-                terminator_rx,
-                log_tx.clone(),
-            ));
-            subscription_tasks.insert(subscription.id, Task::new(terminator_tx, handle));
-        }
+        let target_tasks = spawn_target_handlers(&targets, broadcast_tx.clone(), log_tx.clone());
+        let subscription_tasks =
+            spawn_subscription_handlers(&subscriptions, broadcast_tx.clone(), log_tx.clone());
 
         Self {
+            running: true,
             config,
             broadcast_tx,
             log_tx,
@@ -147,6 +133,31 @@ impl ManagementState {
             subscriptions,
             subscription_tasks,
             log_task,
+        }
+    }
+
+    pub fn set_run_state(&mut self, run_state: bool) {
+        if self.running == run_state {
+            return;
+        }
+        if run_state {
+            self.target_tasks = spawn_target_handlers(
+                &self.targets,
+                self.broadcast_tx.clone(),
+                self.log_tx.clone(),
+            );
+            self.subscription_tasks = spawn_subscription_handlers(
+                &self.subscriptions,
+                self.broadcast_tx.clone(),
+                self.log_tx.clone(),
+            );
+        } else {
+            for (_, task) in self.target_tasks.drain() {
+                task.kill();
+            }
+            for (_, task) in self.subscription_tasks.drain() {
+                task.kill();
+            }
         }
     }
 
@@ -248,4 +259,42 @@ impl ManagementState {
             bail!("Subscription not found.")
         }
     }
+}
+
+fn spawn_target_handlers(
+    targets: &Vec<Target>,
+    broadcast_tx: broadcast::Sender<UpdateMessage>,
+    log_tx: mpsc::Sender<StatMessage>,
+) -> HashMap<usize, Task> {
+    let mut target_tasks = HashMap::new();
+    for target in targets.iter() {
+        let (terminator_tx, terminator_rx) = oneshot::channel();
+        let handle = tokio::spawn(handle_target(
+            target.clone(),
+            broadcast_tx.subscribe(),
+            terminator_rx,
+            log_tx.clone(),
+        ));
+        target_tasks.insert(target.id, Task::new(terminator_tx, handle));
+    }
+    target_tasks
+}
+
+fn spawn_subscription_handlers(
+    subscriptions: &Vec<Subscription>,
+    broadcast_tx: broadcast::Sender<UpdateMessage>,
+    log_tx: mpsc::Sender<StatMessage>,
+) -> HashMap<usize, Task> {
+    let mut subscription_tasks = HashMap::new();
+    for subscription in subscriptions.iter() {
+        let (terminator_tx, terminator_rx) = oneshot::channel();
+        let handle = tokio::spawn(handle_subscription(
+            subscription.clone(),
+            broadcast_tx.clone(),
+            terminator_rx,
+            log_tx.clone(),
+        ));
+        subscription_tasks.insert(subscription.id, Task::new(terminator_tx, handle));
+    }
+    subscription_tasks
 }

@@ -1,3 +1,5 @@
+use std::sync::{atomic::AtomicBool, Arc};
+
 use dashmap::DashMap;
 use dioxus::prelude::{extract, FromContext};
 use tokio::sync::{mpsc, oneshot};
@@ -14,6 +16,7 @@ pub struct AppContext {
     management_tx: mpsc::Sender<ManagementMessageCapsule>,
     targets: DashMap<usize, Target>,
     subscriptions: DashMap<usize, Subscription>,
+    run_state: Arc<AtomicBool>,
 }
 
 impl AppContext {
@@ -47,6 +50,7 @@ impl AppContext {
             management_tx,
             targets: target_map,
             subscriptions: subscription_map,
+            run_state: Arc::new(AtomicBool::new(true)),
         };
 
         (context, management_task)
@@ -124,6 +128,17 @@ impl AppContext {
         self.call(ManagementMessage::ModifySubscription(subscription.clone()))
             .await?;
         self.subscriptions.insert(subscription.id, subscription);
+        Ok(())
+    }
+
+    pub fn get_run_state(&self) -> bool {
+        self.run_state.load(std::sync::atomic::Ordering::Relaxed)
+    }
+
+    pub async fn set_run_state(&self, state: bool) -> CallResult {
+        self.call(ManagementMessage::ChangeRunState(state)).await?;
+        self.run_state
+            .store(state, std::sync::atomic::Ordering::Relaxed);
         Ok(())
     }
 }

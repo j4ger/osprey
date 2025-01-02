@@ -5795,6 +5795,14 @@ textarea:focus-visible {
   top: 100%;
 }
 
+.start-1\/2 {
+  inset-inline-start: 50%;
+}
+
+.top-1\/2 {
+  top: 50%;
+}
+
 .z-0 {
   z-index: 0;
 }
@@ -5979,6 +5987,16 @@ textarea:focus-visible {
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
+.-translate-x-1\/2 {
+  --tw-translate-x: -50%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.-translate-y-1\/2 {
+  --tw-translate-y: -50%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
 .scale-75 {
   --tw-scale-x: .75;
   --tw-scale-y: .75;
@@ -5991,6 +6009,10 @@ textarea:focus-visible {
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+.cursor-progress {
+  cursor: progress;
 }
 
 .resize {
@@ -6156,6 +6178,10 @@ textarea:focus-visible {
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
 }
 
+.bg-base-100\/50 {
+  background-color: var(--fallback-b1,oklch(var(--b1)/0.5));
+}
+
 .bg-gradient-to-tr {
   background-image: linear-gradient(to top right, var(--tw-gradient-stops));
 }
@@ -6222,6 +6248,14 @@ textarea:focus-visible {
 
 .pt-4 {
   padding-top: 1rem;
+}
+
+.pt-1 {
+  padding-top: 0.25rem;
+}
+
+.pt-2 {
+  padding-top: 0.5rem;
 }
 
 .align-bottom {

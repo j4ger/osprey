@@ -62,3 +62,17 @@ pub async fn delete_subscription(subscription_id: usize) -> Result<()> {
         .await
         .map_err(|err| ServerFnError::ServerError(err.to_string()))
 }
+
+#[server]
+pub async fn get_run_state() -> Result<bool> {
+    Ok(AppContext::get().await.get_run_state())
+}
+
+#[server]
+pub async fn set_run_state(state: bool) -> Result<()> {
+    AppContext::get()
+        .await
+        .set_run_state(state)
+        .await
+        .map_err(|err| ServerFnError::ServerError(err.to_string()))
+}

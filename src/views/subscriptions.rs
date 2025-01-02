@@ -56,9 +56,7 @@ pub fn Subscriptions() -> Element {
                         r#type: "button",
                         "aria-label": "Close",
                         class: "btn btn-text btn-circle btn-sm absolute end-3 top-3",
-                        onclick: move |_| {
-                            confirm_open.set(false);
-                        },
+                        onclick: move |_| confirm_open.set(false),
                         span { class: "icon-[tabler--x] size-4" }
                     }
                 }
